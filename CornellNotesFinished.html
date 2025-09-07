@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cornell Note Taking</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #fbfbfd;
+            --text: #222428;
+            --muted: #6b7280;
+            --accent: #5b87c5;
+            /* muted blue */
+            --divider: rgba(91, 135, 197, 0.12);
+            --radius: 12px;
+            --shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+            --focus: 3px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f1113;
+            --surface: #121317;
+            --text: #eef2f6;
+            --muted: #9aa3ad;
+            --accent: #6fa0e0;
+            --divider: rgba(255, 255, 255, 0.06);
+            --shadow: none;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.4;
+            padding: 32px 20px;
+        }
+
+        .topbar {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto 18px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle {
+            --size: 44px;
+            width: var(--size);
+            height: var(--size);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            transition: all .18s ease;
+            box-shadow: var(--shadow);
+        }
+
+        [data-theme="dark"] .toggle {
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .toggle:active {
+            transform: scale(.98)
+        }
+
+        .toggle .dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .title {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--divider);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text);
+            outline: none;
+            box-shadow: var(--shadow);
+        }
+
+        .title::placeholder {
+            color: var(--muted);
+            font-weight: 500
+        }
+
+        .card {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 18px;
+            padding: 18px;
+            border-radius: var(--radius);
+            background: var(--surface);
+            border: 1px solid var(--divider);
+            box-shadow: var(--shadow);
+            border-bottom-right-radius: 0px;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 320px;
+        }
+
+        .left-label {
+            font-size: .92rem;
+            font-weight: 600;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .divider-vert {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--divider), transparent);
+            margin: 6px 0 10px;
+        }
+
+        .keywords {
+            flex: 1;
+            min-height: 200px;
+            padding: 12px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px dashed var(--divider);
+            outline: none;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .keywords::placeholder {
+            color: var(--muted)
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .right-label {
+            font-size: .92rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .notes {
+            flex: 1;
+            min-height: 320px;
+            padding: 14px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--divider);
+            outline: none;
+            color: var(--text);
+            font-size: 0.97rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+
+        .notes.placeholder {
+            color: var(--muted);
+        }
+
+        .summary {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--divider);
+            min-height: 88px;
+            font-size: 0.95rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .save-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(91, 135, 197, 0.18);
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            z-index: 60;
+        }
+
+        .save-btn:active {
+            transform: translateY(1px)
+        }
+
+        .helper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+
+        @media (max-width:880px) {
+            body {
+                padding: 18px 12px
+            }
+
+            .card {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .left-col {
+                order: 2
+            }
+
+            .right-col {
+                order: 1
+            }
+
+            .keywords {
+                min-height: 120px
+            }
+
+            .notes {
+                min-height: 220px
+            }
+
+            .title {
+                font-size: 1.05rem
+            }
+
+            .save-btn {
+                right: 14px;
+                bottom: 14px
+            }
+        }
+
+        input:focus,
+        textarea:focus {
+            box-shadow: 0 0 0 var(--focus) rgba(91, 135, 197, 0.12);
+            border-color: var(--accent);
+        }
+
+        .icon-save {
+            width: 14px;
+            height: 14px;
+            display: inline-block;
+            transform: translateY(1px);
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM12 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-11H6V5h9v3z"/></svg>') center/contain no-repeat;
+            background: white;
+        }
+
+        [data-theme="dark"] .icon-save {
+            background: white
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <button id="themeToggle" class="toggle" title="Toggle dark / light mode">
+            <span class="dot"></span>
+        </button>
+    </div>
+
+    <main class="container" id="app">
+    <input id="title" class="title" type="text" placeholder="Title / Subject" />
+
+    <section class="card">
+        <div class="left-col">
+        <div>
+            <div class="left-label">Keywords / Questions</div>
+            <div class="divider-vert"></div>
+        </div>
+        <textarea id="keywords" class="keywords" placeholder="Jot down keywords or questions..."></textarea>
+        </div>
+
+        <div class="right-col">
+        <div>
+            <div class="right-label">Notes</div>
+            <div class="divider-vert"></div>
+        </div>
+        <div id="notes" class="notes" contenteditable="true" spellcheck="true"
+            placeholder="Type your notes here..."></div>
+
+        <div class="right-label" style="margin-top:6px">Summary</div>
+        <textarea id="summary" class="summary" placeholder="Summarize the key points..."></textarea>
+        </div>
+    </section>
+    </main>
+
+    <button id="saveBtn" class="save-btn" title="Save notes to file">
+    <span class="icon-save"></span>
+    Save
+    </button>
+
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const themeToggle = document.getElementById('themeToggle');
+            const titleEl = document.getElementById('title');
+            const keywordsEl = document.getElementById('keywords');
+            const notesEl = document.getElementById('notes');
+            const summaryEl = document.getElementById('summary');
+            const saveBtn = document.getElementById('saveBtn');
+
+            const initTheme = () => {
+                root.setAttribute('data-theme', "dark");
+                updateToggleVisual();
+            };
+
+            const toggleTheme = () => {
+                const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                root.setAttribute('data-theme', next);
+                localStorage.setItem('cornell_theme', next);
+                themeToggle.setAttribute('aria-pressed', next === 'dark');
+                updateToggleVisual();
+            };
+
+            const updateToggleVisual = () => {
+                const isDark = root.getAttribute('data-theme') === 'dark';
+                themeToggle.querySelector('.dot').style.transform = isDark ? 'translateX(6px) scale(1)' : 'translateX(0) scale(1)';
+            };
+
+            themeToggle.addEventListener('click', toggleTheme);
+
+            //download as txt
+            const downloadNotes = () => {
+                const header = (titleEl.value || 'Cornell Notes').trim();
+                const content =
+`Title: ${header}
+
+Keywords / Questions:
+${keywordsEl.value.trim()}
+
+Notes:
+${notesEl.innerText.trim()}
+
+Summary:
+${summaryEl.value.trim()}
+                    `;
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const safeFileName = header.replace(/[\\/:*?"<>|]+/g, '-').slice(0, 200) || 'cornell-notes';
+                a.download = safeFileName + '.txt';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            };
+
+            saveBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                downloadNotes();
+            });
+
+            notesEl.addEventListener('paste', (ev) => {
+                ev.preventDefault();
+                const text = (ev.clipboardData || window.clipboardData).getData('text/plain');
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return;
+                sel.deleteFromDocument();
+                sel.getRangeAt(0).insertNode(document.createTextNode(text));
+                sel.collapseToEnd();
+            });
+
+            //init
+            initTheme();
+
+            (function placeholderBehavior() {
+                const placeholder = 'Type your notes here...';
+                const setPlaceholder = () => {
+                    if (!notesEl.innerText.trim()) {
+                        notesEl.classList.add('placeholder');
+                        notesEl.innerText = placeholder;
+                        // move caret to start
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        range.selectNodeContents(notesEl);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                };
+
+                //main area activity
+                notesEl.addEventListener('focus', () => {
+                    if (notesEl.classList.contains('placeholder')) 
+                    {
+                        notesEl.classList.remove('placeholder');
+                        notesEl.innerText = '';
+                    }
+                });
+                notesEl.addEventListener('blur', () => {
+                    if (!notesEl.innerText.trim()) 
+                    {
+                        notesEl.classList.add('placeholder');
+                        notesEl.innerText = placeholder;
+                    }
+                });
+                if (!notesEl.innerText.trim()) 
+                {
+                    notesEl.classList.add('placeholder');
+                    notesEl.innerText = placeholder;
+                }
+            })();
+
+            themeToggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') 
+                {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>
