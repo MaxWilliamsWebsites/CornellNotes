@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cornell Note Taking</title>
+    <style>
+        :root {
+            --bg-dark: #ffffff;
+            --bg-medium: #fbfbfd;
+            --bg-light: hsl(240, 33%, 97%);
+
+            --text-primary: #222428;
+            --text-secondary: #6b7280;
+
+            --accent: #5b87c5;
+            --accent-2: hsl(120, 48%, 56%);
+            /* muted blue */
+            --border: hsl(0, 0%, 70%);
+            --border-light: hsl(0, 0%, 60%);
+            --radius: 12px;
+            --shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+            --focus: 3px;
+
+            --sky-color: rgb(149, 213, 255);
+            --sky-rotation: 0deg;
+
+            --theme-transition-time: 500ms;
+        }
+
+        [data-theme="dark"] {
+            --bg-dark: hsl(232, 20%, 5%);
+            --bg-medium: hsl(232, 20%, 6.5%);
+            --bg-light: hsl(232, 20%, 8%);
+            --text-primary: #eef2f6;
+            --text-secondary: #9aa3ad;
+            --accent: #6fa0e0;
+            --accent-2: hsl(120, 48%, 56%);
+
+            --border: hsl(0, 0%, 40%);
+            --border-light: hsl(0, 0%, 30%);
+            --shadow: none;
+
+            --sky-color: rgb(11, 30, 42);
+            --sky-rotation: 180deg;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: background var(--theme-transition-time) ease-in-out, border-color var(--theme-transition-time) ease-in-out, color var(--theme-transition-time) ease-in-out;
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.4;
+            padding: 15px 50px;
+            padding-top: 60px;
+        }
+
+        textarea {
+            resize: none;
+            overflow: hidden;
+        }
+
+        .topbar {
+            width: 100%;
+            margin: 0 auto 18px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-medium);
+        }
+
+        .toggle {
+            --size: 44px;
+            width: var(--size);
+            height: var(--size);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            transition: all .18s ease;
+            box-shadow: var(--shadow);
+        }
+
+        [data-theme="dark"] .toggle {
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .toggle:active {
+            transform: scale(.98)
+        }
+
+        .toggle .dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .title {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            outline: none;
+            box-shadow: var(--shadow);
+        }
+
+        .title::placeholder {
+            color: var(--text-secondary);
+            font-weight: 500
+        }
+
+        .card {
+            display: flex;
+            flex-direction: row;
+            gap: 18px;
+            padding: 18px;
+            border-radius: var(--radius);
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-bottom-right-radius: 0px;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 320px;
+            min-width: 320px;
+            resize: none;
+        }
+
+        .left-label {
+            font-size: .92rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .divider-vert {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 6px 0 10px;
+        }
+
+        .keywords {
+            flex: 1;
+            min-height: 200px;
+            padding: 12px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            outline: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .keywords::placeholder {
+            color: var(--text-secondary)
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .right-label {
+            font-size: .92rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .notes {
+            flex: 1;
+            min-height: 320px;
+            padding: 14px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            outline: none;
+            color: var(--text-primary);
+            font-size: 0.97rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .notes::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .summary {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            min-height: 88px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .summary::placeholder {
+            color:var(--text-secondary)
+        }
+
+        .save-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(91, 135, 197, 0.18);
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .save-btn:active {
+            transform: translateY(1px)
+        }
+
+        .load-btn {
+            background: var(--accent-2);
+            color: white;
+            border: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(91, 135, 197, 0.18);
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .load-btn:active {
+            transform: translateY(1px)
+        }
+
+        .settings-btn {
+            background: hsl(232, 20%, 40%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(91, 135, 197, 0.18);
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            aspect-ratio: 1;
+        }
+
+        .settings-btn:hover .icon-settings {
+            transform: rotate(36deg);
+        }
+
+        .settings-btn:active {
+            transform: translateY(1px)
+        }
+
+        .helper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+
+        @media (max-width:880px) {
+            body {
+                padding: 18px 12px
+            }
+
+            .card {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .left-col {
+                order: 2
+            }
+
+            .right-col {
+                order: 1
+            }
+
+            .keywords {
+                min-height: 120px
+            }
+
+            .notes {
+                min-height: 220px
+            }
+
+            .title {
+                font-size: 1.05rem
+            }
+
+            .save-btn {
+                right: 14px;
+                bottom: 14px
+            }
+        }
+
+        input:focus,
+        textarea:focus {
+            box-shadow: 0 0 0 var(--focus) rgba(91, 135, 197, 0.12);
+            border-color: var(--accent);
+        }
+
+        textarea:active
+        {
+            outline: none;
+            border: 1px solid var(--border-light);
+        }
+
+        .icon-save {
+            width: 14px;
+            height: 14px;
+            display: inline-block;
+            transform: translateY(1px);
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM12 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-11H6V5h9v3z"/></svg>') center/contain no-repeat;
+            background: white;
+        }
+
+        .icon-settings {
+            width: 30px;
+            height: 30px;
+            display: inline-block;
+            transform: translateY(1px);
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M259.1 73.5C262.1 58.7 275.2 48 290.4 48L350.2 48C365.4 48 378.5 58.7 381.5 73.5L396 143.5C410.1 149.5 423.3 157.2 435.3 166.3L503.1 143.8C517.5 139 533.3 145 540.9 158.2L570.8 210C578.4 223.2 575.7 239.8 564.3 249.9L511 297.3C511.9 304.7 512.3 312.3 512.3 320C512.3 327.7 511.8 335.3 511 342.7L564.4 390.2C575.8 400.3 578.4 417 570.9 430.1L541 481.9C533.4 495 517.6 501.1 503.2 496.3L435.4 473.8C423.3 482.9 410.1 490.5 396.1 496.6L381.7 566.5C378.6 581.4 365.5 592 350.4 592L290.6 592C275.4 592 262.3 581.3 259.3 566.5L244.9 496.6C230.8 490.6 217.7 482.9 205.6 473.8L137.5 496.3C123.1 501.1 107.3 495.1 99.7 481.9L69.8 430.1C62.2 416.9 64.9 400.3 76.3 390.2L129.7 342.7C128.8 335.3 128.4 327.7 128.4 320C128.4 312.3 128.9 304.7 129.7 297.3L76.3 249.8C64.9 239.7 62.3 223 69.8 209.9L99.7 158.1C107.3 144.9 123.1 138.9 137.5 143.7L205.3 166.2C217.4 157.1 230.6 149.5 244.6 143.4L259.1 73.5zM320.3 400C364.5 399.8 400.2 363.9 400 319.7C399.8 275.5 363.9 239.8 319.7 240C275.5 240.2 239.8 276.1 240 320.3C240.2 364.5 276.1 400.2 320.3 400z"/></svg>') center/contain no-repeat;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="dark"] .icon-save {
+            background: white
+        }
+
+        .title-container
+        {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        #settings-container {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+
+            width: 400px;
+            height: auto;
+
+            background-color: var(--bg-medium);
+
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+
+            box-shadow: 0 0px 20px rgba(255, 255, 255, 0.08);
+
+            padding: 20px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 20px;
+        }
+
+        #settings-container.disabled {
+            visibility: hidden;
+        }
+
+        #settings-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin: 0;
+            padding-bottom: 10px;
+
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.5px;
+        }
+
+
+        .settings-category {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-subtitle {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        #indent-button-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .indent-type-button {
+            height: 40px;
+
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+
+            cursor: pointer;
+            font-weight: 500;
+
+
+            white-space: pre;
+            font-size: medium;
+        }
+
+        .indent-type-button:hover {
+            background: color-mix(in srgb, var(--bg-medium) 80%, var(--bg-dark));
+            border-color: var(--text-primary);
+        }
+
+        .indent-type-button:active {
+            transform: translateY(1px);
+        }
+
+        #theme-container
+        {
+            width: 100%;
+            height: 100px;
+            background-color: var(--sky-color);
+            cursor: pointer;
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--text-secondary);
+            transition: background-color 500ms ease-in-out;
+        }
+
+        #theme-pivot {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: rotate(var(--sky-rotation));
+
+            transition: transform 500ms ease-in-out;
+        }
+
+        #theme-sun
+        {
+            position: absolute;
+            top: -80px;
+            width: 40px;
+            height: 40px;
+            border-radius: 48%;
+            background-image: radial-gradient(rgb(255, 197, 90), rgb(255, 217, 90));
+            transform: translateX(-50%);
+        }
+
+        #theme-moon
+        {
+            position: absolute;
+            top: 40px;
+            width: 40px;
+            height: 40px;
+            border-radius: 48%;
+            background-color: #fff7db;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container" id="app">
+        <div class="title-container">
+            <input id="title" class="title" type="text" placeholder="Title / Subject" style="background-color: var(--bg-medium);"/>
+
+            <input id="loadBtn" type="file" hidden>
+
+            <label for="loadBtn" class="load-btn">
+                <span class="icon-save"></span>
+                Load
+            </label>
+            <button id="saveBtn" class="save-btn" title="Save notes to file">
+                <span class="icon-save"></span>Save
+            </button>
+
+            <button id="settingsBtn" class="settings-btn" title="Save notes to file">
+                <span class="icon-settings"></span>
+            </button>
+        </div>
+
+        <section class="card">
+            <div class="left-col">
+                <div>
+                    <div class="left-label">Keywords / Questions</div>
+                    <div class="divider-vert"></div>
+                </div>
+                <textarea id="keywords" class="keywords" placeholder="Jot down keywords or questions..."></textarea>
+            </div>
+
+            <div class="right-col">
+                <div>
+                    <div class="right-label">Notes</div>
+                    <div class="divider-vert"></div>
+                </div>
+                <textarea id="notes" class="notes" contenteditable="true" spellcheck="true"
+                    placeholder="Type your notes here..."></textarea>
+
+                <div class="right-label" style="margin-top:6px">Summary</div>
+                <textarea id="summary" class="summary" placeholder="Summarize the key points..."></textarea>
+            </div>
+        </section>
+
+        <div id="settings-container" class="disabled">
+            <p id="settings-title">Page Settings.</p>
+
+            <div class="settings-category">
+                <p class="setting-subtitle">Indent Type</p>
+                <div id="indent-button-container">
+                    <button class="indent-type-button" onclick="SetIndentType(0)">'  -  '</button>
+                    <button class="indent-type-button" onclick="SetIndentType(1)">'  _  '</button>
+                    <button class="indent-type-button" onclick="SetIndentType(2)">'  .  '</button>
+                    <button class="indent-type-button" onclick="SetIndentType(3)">' ->  '</button>
+                    <button class="indent-type-button" onclick="SetIndentType(4)">'  #  '</button>
+                    <button class="indent-type-button" onclick="SetIndentType(5)">'  ~  '</button>
+                </div>
+            </div>
+
+            <div class="settings-category">
+                <p class="setting-subtitle">Theme</p>
+                <div id="theme-container">
+                    <div id="theme-pivot">
+                        <div id="theme-sun"></div>
+                        <div id="theme-moon">
+                            <div style="width: 10px; height: 10px; background-color: #ddd5b6; border-radius: 50%;
+                                        transform: translate(5px, 10px);"></div>
+                            <div style="width: 18px; height: 18px; background-color: #e6dec1; border-radius: 50%;
+                                        transform: translate(15px, 8px);"></div>
+                            <div style="width: 7px; height: 7px; background-color: #ded9c7; border-radius: 50%;
+                                        transform: translate(16px, -20px);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const root = document.documentElement;
+        const themeToggle = document.getElementById('theme-container');
+        const titleEl = document.getElementById('title');
+        const keywordsEl = document.getElementById('keywords');
+        const notesEl = document.getElementById('notes');
+        const summaryEl = document.getElementById('summary');
+        const loadBtn = document.getElementById('loadBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsMenu = document.getElementById('settings-container');
+
+        loadBtn.addEventListener("change", e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                LoadText(reader.result);
+            }
+            reader.readAsText(file);
+        });
+
+        function getSection(text, name) {
+            const regex = new RegExp(
+                `=== ${name} ===([\\s\\S]*?)(?=\\n===|$)`,
+                "i"
+            );
+            const match = text.match(regex);
+            return match ? match[1].trim() : null;
+        }
+
+        function LoadText(text) {
+            const title = getSection(text, "Title");
+            const keywords = getSection(text, "Keywords / Questions");
+            const notes = getSection(text, "Notes");
+            const summary = getSection(text, "Summary");
+
+            console.log({ title, keywords, notes, summary });
+
+            titleEl.value = title;
+            keywordsEl.value = keywords;
+            notesEl.value = notes;
+            summaryEl.value = summary;
+        }
+
+        let IndentType = 0;
+        let IndentTypes = [ " - ", " _ ", " . ", "-> ", " # ", " ~ " ];
+
+        class IndentData {
+            constructor(indentLevel = 0, indentType = 0) 
+            {
+                this.indentLevel = indentLevel;
+                this.indentType = indentType;
+            }
+        }
+
+        function SetIndentType(index)
+        {
+            IndentType = index;
+            localStorage.setItem('cornell_indentType', index);
+        }
+
+        settingsBtn.addEventListener("click", () => {
+            if (settingsMenu.classList.contains("disabled"))
+            {
+                settingsMenu.classList.remove("disabled");
+            } 
+            else
+            {
+                settingsMenu.classList.add("disabled");
+            }
+        });
+
+        function SetTextAreaBehaviour(e, textarea)
+        {
+            if (e.key === "Backspace")
+            {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+
+                if (start != end)
+                    return;
+
+                const text = textarea.value;
+
+                const lineText = GetLineText(text, start);
+                const lineTextIndex = GetLineTextIndex(text, start);
+
+                const actualIndex = start - lineTextIndex;
+                let isIndent = false;
+                let deletingType = 0;
+                let beforetext = lineText.slice(max(actualIndex - 3, 0), actualIndex);
+
+                for (let i = 0; i < IndentTypes.length; i++) 
+                {
+                    const ind = IndentTypes[i];
+
+                    //console.log("." + beforetext + ",,," + ind + ".");
+                    if (beforetext === ind)
+                    {
+                        if (true || lineText.slice(0, max(actualIndex - 3, 0)).trim() == "")
+                        {
+                            isIndent = true;
+                            deletingType = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isIndent)
+                    return;
+                
+                e.preventDefault();
+                let whitespace = lineText.slice(0, actualIndex).length - IndentTypes[deletingType].length;
+
+                if (whitespace <= 0)
+                    textarea.value = 
+                        textarea.value.slice(0, lineTextIndex) +
+                        textarea.value.slice(end);
+                else
+                {
+                    let gap = max(whitespace - 3, 0);
+                    let fill = "";
+                    if (gap == 0)
+                        fill = IndentTypes[deletingType];
+                    else  
+                        fill = " ".repeat(gap) + IndentTypes[deletingType];
+
+                    textarea.value = 
+                        textarea.value.slice(0, lineTextIndex) +
+                        fill +
+                        textarea.value.slice(end);
+                }
+            }
+            if (e.key === "Enter")
+            {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+
+                const text = textarea.value;
+
+                const lineText = GetLineText(text, start);
+                const indentData = GetTextIndentation(lineText);
+
+                if (indentData.indentLevel === -1) return;
+
+                e.preventDefault();
+
+                const indent =
+                    "\n" +
+                    "   ".repeat(indentData.indentLevel - 1) +
+                    IndentTypes[indentData.indentType];
+
+                textarea.value =
+                    text.slice(0, start) +
+                    indent +
+                    text.slice(end);
+
+                const newCursor = start + indent.length;
+                textarea.selectionStart = textarea.selectionEnd = newCursor;
+            }
+            if (e.key === "Tab") {
+                e.preventDefault();
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                let insert = IndentTypes[IndentType];
+                if (insert == null)
+                {
+                    SetIndentType(0);
+                }
+
+                let beforetext = textarea.value.slice(max(start - 3, 0), start);
+                IndentTypes.forEach(ind => {
+                    if (beforetext == ind)
+                    {
+                        textarea.value =
+                            textarea.value.slice(0, start - 3)
+                            + textarea.value.slice(end);
+
+                        insert = "   " + insert;
+                    }
+                });
+
+                textarea.value =
+                textarea.value.slice(0, start) +
+                insert +
+                textarea.value.slice(end);
+
+                textarea.selectionStart = textarea.selectionEnd = start + insert.length;
+            }
+        }
+
+        function max(a, b)
+        {
+            return a > b ? a : b;
+        }
+
+        function min(a, b)
+        {
+            return a < b ? a : b;
+        }
+
+        function GetLineText(wholetext, selectedat) {
+            const lines = wholetext.split("\n");
+            let current = 0;
+
+            for (let line of lines) {
+                const lineLength = line.length + 1;
+
+                if (selectedat < current + lineLength) {
+                    return line;
+                }
+
+                current += lineLength;
+            }
+
+            return "";
+        }
+
+        function GetLineTextIndex(wholetext, selectedat)
+        {
+            const lines = wholetext.split("\n");
+            let current = 0;
+
+            for (let line of lines) {
+                const lineLength = line.length + 1;
+
+                if (selectedat < current + lineLength) {
+                    return current;
+                }
+
+                current += lineLength;
+            }
+
+            return 0;
+        }
+
+        function GetTextIndentation(text)
+        {
+            let indented = false;
+            let indentationType = 0;
+            for (let i = 0; i < IndentTypes.length; i++)
+            {
+                let sp = text.split(IndentTypes[i]);
+                if (sp.length > 1) {
+                    indented = true;
+                    indentationType = i;
+                    break;
+                }
+            }
+
+            let firstchar = IndentTypes[indentationType].trim()[0];
+            let indentedAt = -1;
+            for (let i = 0; i < text.length; i++)
+            {
+                if (text[i] == firstchar) {
+                    indentedAt = i + 1;
+                    break;
+                }
+            }
+
+            let indentationlevel = Math.ceil(indentedAt / 3);
+
+            const IndentationData = new IndentData(
+                indentationlevel > 0 ? indentationlevel : -1, 
+                indentationlevel > 0 ? indentationType : -1
+            );
+
+            return IndentationData;
+        }
+
+        const textareas = document.querySelectorAll("textarea");
+
+        textareas.forEach(textarea => {
+            console.log("added function");
+
+            textarea.addEventListener("keydown", (e) => {
+                SetTextAreaBehaviour(e, textarea);
+            });
+
+            let minHeight = textarea.style.minHeight;
+            textarea.addEventListener("input", () => {
+                textarea.style.minHeight = minHeight + "px";
+                textarea.style.height = "auto";
+                textarea.style.minHeight = textarea.scrollHeight + 1 + "px";
+                console.log("doing something: " + textarea.scrollHeight);
+            });
+        });
+
+        const initTheme = () => {
+            root.setAttribute('data-theme', localStorage.getItem("cornell_theme"));
+            IndentType = localStorage.getItem("cornell_indentType");
+        };
+
+        const toggleTheme = () => {
+            const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            localStorage.setItem('cornell_theme', next);
+        };
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        //download as txt
+        const downloadNotes = () => {
+            const header = (titleEl.value || 'Cornell Notes').trim();
+            const content =
+`=== Title ===\n ${header}
+
+=== Keywords / Questions ===
+${keywordsEl.value.trim()}
+
+=== Notes ===
+${notesEl.value.trim()}
+
+=== Summary ===
+${summaryEl.value.trim()}
+                `;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeFileName = header.replace(/[\\/:*?"<>|]+/g, '-').slice(0, 200) || 'cornell-notes';
+            a.download = safeFileName + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        };
+
+        saveBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            downloadNotes();
+        });
+
+        //init
+        initTheme();
+
+        (function placeholderBehavior() {
+            const placeholder = 'Type your notes here...';
+            const setPlaceholder = () => {
+                if (!notesEl.value.trim()) {
+                    notesEl.classList.add('placeholder');
+                    notesEl.innerText = placeholder;
+
+                    // move caret to start
+                    const range = document.createRange();
+                    const sel = window.getSelection();
+                    range.selectNodeContents(notesEl);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            };
+
+            //main area activity
+            notesEl.addEventListener('focus', () => {
+                if (notesEl.classList.contains('placeholder')) {
+                    notesEl.classList.remove('placeholder');
+                    notesEl.value = '';
+                }
+            });
+            notesEl.addEventListener('blur', () => {
+                if (!notesEl.value.trim()) {
+                    notesEl.classList.add('placeholder');
+                }
+            });
+            if (!notesEl.value.trim()) {
+                notesEl.classList.add('placeholder');
+            }
+        })();
+
+        themeToggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleTheme();
+            }
+        });
+    </script>
+</body>
+
+</html>
